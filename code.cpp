@@ -11,7 +11,7 @@ int main() {
     scanf("%d %d %d", &x, &k, &p);
     
     // Map to store the number of seats that start/end at each station
-    map<int, int> seat_changes;
+    map<int, int> events;
     
     for (int i = 0; i < p; i++) {
         int u, v, n;
@@ -20,52 +20,60 @@ int main() {
         // Check if we can accommodate this booking
         // We need to check if there are enough seats available from u to v-1
         
-        // Create a vector of all relevant stations for this query
-        vector<int> stations;
-        stations.push_back(u);
-        stations.push_back(v);
+        // Get all event points in the range [u, v)
+        vector<int> points;
+        points.push_back(u);
         
-        // Add all keys from seat_changes that are in range [u, v)
-        for (auto it = seat_changes.lower_bound(u); it != seat_changes.end() && it->first < v; ++it) {
-            stations.push_back(it->first);
+        // Add all event points in the range [u, v)
+        auto it_low = events.lower_bound(u);
+        auto it_high = events.lower_bound(v);
+        for (auto it = it_low; it != it_high; ++it) {
+            points.push_back(it->first);
         }
         
-        // Sort and remove duplicates
-        sort(stations.begin(), stations.end());
-        stations.erase(unique(stations.begin(), stations.end()), stations.end());
+        // Sort points
+        sort(points.begin(), points.end());
         
-        // Check availability in each segment
+        // Check each segment between consecutive points
         bool can_book = true;
-        int current_seats = 0;
         
-        // Calculate current occupancy at station u
-        for (auto it = seat_changes.begin(); it != seat_changes.lower_bound(u); ++it) {
-            current_seats += it->second;
+        // Calculate occupancy just before u
+        int current_occupancy = 0;
+        for (auto it = events.begin(); it != events.lower_bound(u); ++it) {
+            current_occupancy += it->second;
         }
         
-        // Check each segment
-        for (int j = 0; j < stations.size() - 1; j++) {
-            int seg_start = stations[j];
-            int seg_end = stations[j+1];
+        // Check occupancy in each segment [points[i], points[i+1])
+        for (int j = 0; j < (int)points.size() - 1; j++) {
+            int start = points[j];
+            int end = points[j+1];
             
-            // If this segment is within our booking range and would exceed capacity
-            if (seg_start >= u && seg_end <= v) {
-                if (current_seats + n > k) {
+            // This segment is within our booking range
+            if (start >= u && end <= v) {
+                if (current_occupancy + n > k) {
                     can_book = false;
                     break;
                 }
             }
             
-            // Update current_seats for the next segment
-            if (seat_changes.find(seg_start) != seat_changes.end()) {
-                current_seats += seat_changes[seg_start];
+            // Update occupancy for the next segment
+            if (events.find(start) != events.end()) {
+                current_occupancy += events[start];
+            }
+        }
+        
+        // Also check the last segment from last point to v if needed
+        if (can_book && !points.empty() && points.back() < v) {
+            // Check occupancy from last point to v
+            if (current_occupancy + n > k) {
+                can_book = false;
             }
         }
         
         if (can_book) {
-            // Update seat_changes with this booking
-            seat_changes[u] += n;
-            seat_changes[v] -= n;
+            // Update events with this booking
+            events[u] += n;
+            events[v] -= n;
             printf("T\n");
         } else {
             printf("N\n");
