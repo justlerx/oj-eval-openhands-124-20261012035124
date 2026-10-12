@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <vector>
+#include <stdlib.h>
 
 int main() {
     int x, k, p;
@@ -8,8 +8,11 @@ int main() {
     }
     
     // Use a difference array to track seat changes
-    // We'll use 1-based indexing, so we need x+1 elements
-    std::vector<int> diff(x + 2, 0);  // diff[i] = change in seats at station i
+    // We'll use 1-based indexing, so we need x+2 elements
+    int *diff = (int *)calloc(x + 2, sizeof(int));
+    if (diff == NULL) {
+        return 1;
+    }
     
     for (int i = 0; i < p; i++) {
         int u, v, n;
@@ -22,24 +25,35 @@ int main() {
         // We need to check if there are enough seats available from u to v-1
         
         // Create a copy of the current difference array
-        std::vector<int> temp_diff = diff;
+        int *temp_diff = (int *)malloc((x + 2) * sizeof(int));
+        if (temp_diff == NULL) {
+            printf("N\n");
+            continue;
+        }
+        
+        for (int j = 0; j <= x + 1; j++) {
+            temp_diff[j] = diff[j];
+        }
         
         // Apply the potential booking to the temporary difference array
         temp_diff[u] += n;
         temp_diff[v] -= n;
         
         // Check if any segment exceeds capacity
-        bool can_book = true;
+        int can_book = 1;
         int current_seats = 0;
         
         // Check from station 1 to x
         for (int j = 1; j <= x; j++) {
             current_seats += temp_diff[j];
             if (current_seats > k) {
-                can_book = false;
+                can_book = 0;
                 break;
             }
         }
+        
+        // Free the temporary array
+        free(temp_diff);
         
         if (can_book) {
             // Update the actual difference array
@@ -51,5 +65,7 @@ int main() {
         }
     }
     
+    // Free the difference array
+    free(diff);
     return 0;
 }
