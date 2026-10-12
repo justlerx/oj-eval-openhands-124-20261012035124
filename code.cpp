@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <vector>
-#include <map>
-#include <algorithm>
 
 int main() {
     int x, k, p;
@@ -9,8 +7,9 @@ int main() {
         return 1;
     }
     
-    // Map to store the number of seats that start/end at each station
-    std::map<int, int> events;
+    // Use a difference array to track seat changes
+    // We'll use 1-based indexing, so we need x+1 elements
+    std::vector<int> diff(x + 2, 0);  // diff[i] = change in seats at station i
     
     for (int i = 0; i < p; i++) {
         int u, v, n;
@@ -22,65 +21,30 @@ int main() {
         // Check if we can accommodate this booking
         // We need to check if there are enough seats available from u to v-1
         
-        // Get all event points in the range [u, v)
-        std::vector<int> points;
-        points.push_back(u);
+        // Create a copy of the current difference array
+        std::vector<int> temp_diff = diff;
         
-        // Add all event points in the range [u, v)
-        auto it_low = events.lower_bound(u);
-        auto it_high = events.lower_bound(v);
-        for (auto it = it_low; it != it_high; ++it) {
-            points.push_back(it->first);
-        }
+        // Apply the potential booking to the temporary difference array
+        temp_diff[u] += n;
+        temp_diff[v] -= n;
         
-        // Sort points
-        std::sort(points.begin(), points.end());
-        
-        // Remove duplicates
-        auto last = std::unique(points.begin(), points.end());
-        points.erase(last, points.end());
-        
-        // Check each segment between consecutive points
+        // Check if any segment exceeds capacity
         bool can_book = true;
+        int current_seats = 0;
         
-        // Calculate occupancy just before u
-        int current_occupancy = 0;
-        for (auto it = events.begin(); it != events.lower_bound(u); ++it) {
-            current_occupancy += it->second;
-        }
-        
-        // Check occupancy in each segment [points[i], points[i+1])
-        for (int j = 0; j < (int)points.size() - 1; j++) {
-            int start = points[j];
-            int end = points[j+1];
-            
-            // This segment is within our booking range
-            if (start >= u && end <= v) {
-                if (current_occupancy + n > k) {
-                    can_book = false;
-                    break;
-                }
-            }
-            
-            // Update occupancy for the next segment
-            auto event_it = events.find(start);
-            if (event_it != events.end()) {
-                current_occupancy += event_it->second;
-            }
-        }
-        
-        // Also check the last segment from last point to v if needed
-        if (can_book && !points.empty() && points.back() < v) {
-            // Check occupancy from last point to v
-            if (current_occupancy + n > k) {
+        // Check from station 1 to x
+        for (int j = 1; j <= x; j++) {
+            current_seats += temp_diff[j];
+            if (current_seats > k) {
                 can_book = false;
+                break;
             }
         }
         
         if (can_book) {
-            // Update events with this booking
-            events[u] += n;
-            events[v] -= n;
+            // Update the actual difference array
+            diff[u] += n;
+            diff[v] -= n;
             printf("T\n");
         } else {
             printf("N\n");
