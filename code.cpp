@@ -1,10 +1,7 @@
-#include <iostream>
+#include <stdio.h>
 #include <vector>
 #include <map>
 #include <algorithm>
-#include <cstdio>
-
-using namespace std;
 
 int main() {
     int x, k, p;
@@ -13,7 +10,7 @@ int main() {
     }
     
     // Map to store the number of seats that start/end at each station
-    map<int, int> events;
+    std::map<int, int> events;
     
     for (int i = 0; i < p; i++) {
         int u, v, n;
@@ -26,7 +23,7 @@ int main() {
         // We need to check if there are enough seats available from u to v-1
         
         // Get all event points in the range [u, v)
-        vector<int> points;
+        std::vector<int> points;
         points.push_back(u);
         
         // Add all event points in the range [u, v)
@@ -37,10 +34,11 @@ int main() {
         }
         
         // Sort points
-        sort(points.begin(), points.end());
+        std::sort(points.begin(), points.end());
         
         // Remove duplicates
-        points.erase(unique(points.begin(), points.end()), points.end());
+        auto last = std::unique(points.begin(), points.end());
+        points.erase(last, points.end());
         
         // Check each segment between consecutive points
         bool can_book = true;
