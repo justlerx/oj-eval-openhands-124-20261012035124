@@ -34,6 +34,9 @@ int main() {
         // Sort points
         sort(points.begin(), points.end());
         
+        // Remove duplicates
+        points.erase(unique(points.begin(), points.end()), points.end());
+        
         // Check each segment between consecutive points
         bool can_book = true;
         
@@ -57,8 +60,9 @@ int main() {
             }
             
             // Update occupancy for the next segment
-            if (events.find(start) != events.end()) {
-                current_occupancy += events[start];
+            auto event_it = events.find(start);
+            if (event_it != events.end()) {
+                current_occupancy += event_it->second;
             }
         }
         
