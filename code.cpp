@@ -8,14 +8,19 @@ using namespace std;
 
 int main() {
     int x, k, p;
-    scanf("%d %d %d", &x, &k, &p);
+    if (scanf("%d %d %d", &x, &k, &p) != 3) {
+        return 1;
+    }
     
     // Map to store the number of seats that start/end at each station
     map<int, int> events;
     
     for (int i = 0; i < p; i++) {
         int u, v, n;
-        scanf("%d %d %d", &u, &v, &n);
+        if (scanf("%d %d %d", &u, &v, &n) != 3) {
+            printf("N\n");
+            continue;
+        }
         
         // Check if we can accommodate this booking
         // We need to check if there are enough seats available from u to v-1
